@@ -4,160 +4,158 @@ using namespace std;
 
 class HashTable
 {
-    int capacity;
-    int *dataArray;
-    int itemCount;
-    float maxLoadFactor;
+    int size;
+    int *Array0;
+    int entered;
+    float loadfactor;
 
 public:
-    HashTable(int initCapacity)
+    HashTable(int initialSize)
     {
-        capacity = initCapacity;
-        dataArray = new int[capacity];
-        itemCount = 0;
-        maxLoadFactor = 0.8;
+        size = initialSize;
+        Array0 = new int[size];
+        entered = 0;
+        loadfactor = 0.8;
 
-        // Initialize all elements to -1, as we assume only non-negative keys will be inserted
-        for (int i = 0; i < capacity; i++)
+        // initial values set to -1, as only non-negative keys entered
+        for (int i = 0; i < size; i++)
         {
-            dataArray[i] = -1;
+            Array0[i] = -1;
         }
     }
 
-    bool isPrime(int number)
+    bool primeCheck(int num)
     {
-        int divisorCount = 0;
-        for (int i = 1; i <= number; i++)
+        int count = 0;
+        for (int i = 1; i <= num; i++)
         {
-            if (number % i == 0)
+            if (num % i == 0)
             {
-                divisorCount++;
+                count += 1;
             }
         }
-        return divisorCount == 2;
+        return count == 2;
     }
 
-    int getNextPrime(int currentCapacity)
+    int primeResize(int currentSize)
     {
-        int num = currentCapacity * 2;
-        while (!isPrime(num))
+        int num = currentSize * 2;
+        while (primeCheck(num) != true)
         {
-            num++;
+            num += 1;
         }
         return num;
     }
 
-    void expandTable()
+    void Resizing()
     {
-        int newCapacity = getNextPrime(capacity);
-        int *newDataArray = new int[newCapacity];
+        int newSize = primeResize(size);
+        int *Array1 = new int[newSize];
 
-        // Initialize new array with -1 to represent empty slots
-        for (int i = 0; i < newCapacity; i++)
+        // initial values set to -1, as only non-negative keys entered
+        for (int i = 0; i < newSize; i++)
         {
-            newDataArray[i] = -1;
+            Array1[i] = -1;
         }
 
-        // Rehash existing keys into new array
-        for (int i = 0; i < capacity; i++)
+        for (int i = 0; i < size; i++)
         {
-            if (dataArray[i] != -1)
+            if (Array0[i] != -1)
             {
-                int key = dataArray[i];
-                int newIndex = key % newCapacity;
+                int key = Array0[i];
+                int index = key % newSize;
 
-                // Quadratic probing to resolve collisions in new array
+                // Quadratic probing to find empty slots in new array
                 int j = 0;
-                while (newDataArray[(newIndex + j * j) % newCapacity] != -1 && j <= (newCapacity + 1) / 2)
+                while (Array1[(index + j * j) % newSize] != -1 && j <= ((newSize + 1) / 2))
                 {
-                    j++;
+                    j += 1;
                 }
-                int newPos = (newIndex + j * j) % newCapacity;
-                if (newDataArray[newPos] == -1)
-                    newDataArray[newPos] = key;
+                int position = (index + j * j) % newSize;
+                if (Array1[position] == -1)
+                    Array1[position] = key;
                 else
-                    cout << "Collision limit exceeded during rehashing!" << endl;
+                    cout << "Max probing limit reached!" << endl;
             }
         }
 
-        delete[] dataArray; // Deallocate old array
-        dataArray = newDataArray;
-        capacity = newCapacity;
+        delete[] Array0; // Deleting old array outside the loop
+        Array0 = Array1;
+        size = newSize;
     }
 
     void insert(int key)
     {
-        float load = itemCount / (float)capacity; // Avoid integer division
-        if (load >= maxLoadFactor)
+        float load = entered / (float)size; // Cast to float to avoid integer truncation
+        if (load >= loadfactor)
         {
-            expandTable();
+            Resizing();
         }
 
-        int index = key % capacity;
+        int index = key % size;
         int j = 0;
-        while (dataArray[(index + j * j) % capacity] != -1 && j <= (capacity + 1) / 2)
+        while (Array0[(index + j * j) % size] != -1 && j <= ((size + 1) / 2))
         {
-            if (dataArray[(index + j * j) % capacity] == key)
+            if (Array0[(index + j * j) % size] == key)
             {
-                cout << "Key duplication is not allowed" << endl;
+                cout << "Duplicate key insertion is not allowed" << endl;
                 return;
             }
-            j++;
+            j += 1;
         }
-        int pos = (index + j * j) % capacity;
-        if (dataArray[pos] == -1)
-        {
-            dataArray[pos] = key;
-            itemCount++;
-        }
+        int position = (index + j * j) % size;
+        if (Array0[position] == -1)
+            {Array0[position] = key;
+            entered += 1;}
         else
         {
-            cout << "Collision limit reached!" << endl;
+            cout << "Max probing limit reached!" << endl;
+            return;
         }
     }
 
     void remove(int key)
     {
-        int index = search(key);
-        if (index != -1)
+        int indexRM = search(key);
+        if (indexRM != -1)
         {
-            dataArray[index] = -1;
-            itemCount--;
+            Array0[indexRM] = -1;
+            entered--;
         }
         else
-            cout << "Key not found" << endl;
+            cout << "Element not found" << endl;
     }
 
     int search(int key)
     {
-        int index = key % capacity;
+        int index = key % size;
         int j = 0;
 
-        while (dataArray[(index + j * j) % capacity] != key && j <= (capacity + 1) / 2)
+        while (Array0[(index + j * j) % size] != key && j <= ((size + 1) / 2))
         {
-            if (dataArray[(index + j * j) % capacity] == -1)
+            if (Array0[(index + j * j) % size] == -1)
             {
                 return -1;
             }
             j++;
         }
-        if (dataArray[(index + j * j) % capacity] == key)
-            return (index + j * j) % capacity;
+        if (Array0[(index + j * j) % size] == key)
+            return (index + j * j) % size;
         else
             return -1;
     }
 
     void printTable()
     {
-        for (int i = 0; i < capacity; i++)
+        for (int i = 0; i < size; i++) // Corrected loop condition
         {
-            if (dataArray[i] == -1)
+            if (Array0[i] == -1)
             {
                 cout << "- ";
             }
             else
             {
-                cout << dataArray[i] << " ";
+                cout << Array0[i] << " ";
             }
         }
         cout << endl;

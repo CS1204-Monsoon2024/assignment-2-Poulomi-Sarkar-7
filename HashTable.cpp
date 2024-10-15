@@ -147,7 +147,7 @@ public:
             return -1;
     }
 
-    void displayTable()
+    void printTable()
     {
         for (int i = 0; i < capacity; i++)
         {

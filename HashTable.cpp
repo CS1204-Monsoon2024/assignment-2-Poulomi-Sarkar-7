@@ -5,108 +5,110 @@ using namespace std;
 class HashTable
 {
     int size;
-    int *Array0;
-    int entered;
-    float loadfactor;
+    int *arr1;
+    int input;
+    float lf;       //lf=Loadfactor
 
 public:
-    HashTable(int initialSize)
+    HashTable(int x)
     {
-        size = initialSize;
-        Array0 = new int[size];
-        entered = 0;
-        loadfactor = 0.8;
+        size = x;
+        arr1 = new int[size];
+        lf = 0.8;
+        input = 0;
+        
 
-        // initial values set to -1, as only non-negative keys entered
+        // initially set every input to -1
         for (int i = 0; i < size; i++)
         {
-            Array0[i] = -1;
+            arr1[i] = -1;
         }
     }
 
-    bool primeCheck(int num)
+
+    int resize(int size_current)    //Next prime number atleats twice the current size
     {
-        int count = 0;
-        for (int i = 1; i <= num; i++)
+        int no = size_current * 2;
+        while (isPrime(no) != true)
         {
-            if (num % i == 0)
+            no += 1;
+        }
+        return no;
+    }
+    
+    bool isPrime(int no)        //To check if number is prime
+    {
+        int c = 0;      //counter
+        for (int i = 1; i <= no; i++)
+        {
+            if (no % i == 0)
             {
-                count += 1;
+                c += 1;
             }
         }
-        return count == 2;
-    }
-
-    int primeResize(int currentSize)
-    {
-        int num = currentSize * 2;
-        while (primeCheck(num) != true)
-        {
-            num += 1;
-        }
-        return num;
+        return c == 2;
     }
 
     void Resizing()
     {
-        int newSize = primeResize(size);
-        int *Array1 = new int[newSize];
+        int size_new = resize(size);        //size of resized table
+        int *arr2 = new int[size_new];
 
-        // initial values set to -1, as only non-negative keys entered
-        for (int i = 0; i < newSize; i++)
+        // initially set values to -1
+        for (int i = 0; i < size_new; i++)
         {
-            Array1[i] = -1;
+            arr2[i] = -1;
         }
 
         for (int i = 0; i < size; i++)
         {
-            if (Array0[i] != -1)
+            if (arr1[i] != -1)
             {
-                int key = Array0[i];
-                int index = key % newSize;
+                int key = arr1[i];
+                int index = key % size_new;
 
-                // Quadratic probing to find empty slots in new array
+                // using quadratic probing
                 int j = 0;
-                while (Array1[(index + j * j) % newSize] != -1 && j <= ((newSize + 1) / 2))
+                while (arr2[(index + j * j) % size_new] != -1 && j <= ((size_new + 1) / 2))
                 {
                     j += 1;
                 }
-                int position = (index + j * j) % newSize;
-                if (Array1[position] == -1)
-                    Array1[position] = key;
+                int pos = (index + j * j) % size_new;
+                if (arr2[pos] == -1)
+                    arr2[pos] = key;
                 else
                     cout << "Max probing limit reached!" << endl;
             }
         }
 
-        delete[] Array0; // Deleting old array outside the loop
-        Array0 = Array1;
-        size = newSize;
+        delete[] arr1; // delete the older array
+        arr1 = arr2;
+        size = size_new;
     }
 
     void insert(int key)
     {
-        float load = entered / (float)size; // Cast to float to avoid integer truncation
-        if (load >= loadfactor)
+        float new_lf = input / (float)size; // typecast to float type
+        if (new_lf >= lf)
         {
-            Resizing();
+            Resizing();         //resize
         }
 
         int index = key % size;
-        int j = 0;
-        while (Array0[(index + j * j) % size] != -1 && j <= ((size + 1) / 2))
+        int i = 0;
+        while (arr1[(index + i * i) % size] != -1 && i <= ((size + 1) / 2))
         {
-            if (Array0[(index + j * j) % size] == key)
+            if (arr1[(index + i * i) % size] == key)
             {
                 cout << "Duplicate key insertion is not allowed" << endl;
                 return;
             }
-            j += 1;
+            i += 1;
         }
-        int position = (index + j * j) % size;
-        if (Array0[position] == -1)
-            {Array0[position] = key;
-            entered += 1;}
+        int pos = (index + i * i) % size;
+        if (arr1[pos] == -1)
+            {arr1[pos] = key;
+            input += 1;}
         else
         {
             cout << "Max probing limit reached!" << endl;
@@ -114,48 +116,49 @@ public:
         }
     }
 
+
+    int search(int key)             //function to search
+    {
+        int index = key % size;
+        int i = 0;
+
+        while (arr1[(index + i * i) % size] != key && i <= ((size + 1) / 2))
+        {
+            if (arr1[(index + i * i) % size] == -1)
+            {
+                return -1;
+            }
+            i++;
+        }
+        if (arr1[(index + i * i) % size] == key)
+            return (index + i * i) % size;
+        else
+            return -1;
+    }
+    
     void remove(int key)
     {
-        int indexRM = search(key);
-        if (indexRM != -1)
+        int x = search(key);        //Element to remove
+        if (x != -1)
         {
-            Array0[indexRM] = -1;
-            entered--;
+            arr1[x] = -1;
+            input--;
         }
         else
             cout << "Element not found" << endl;
     }
 
-    int search(int key)
-    {
-        int index = key % size;
-        int j = 0;
-
-        while (Array0[(index + j * j) % size] != key && j <= ((size + 1) / 2))
-        {
-            if (Array0[(index + j * j) % size] == -1)
-            {
-                return -1;
-            }
-            j++;
-        }
-        if (Array0[(index + j * j) % size] == key)
-            return (index + j * j) % size;
-        else
-            return -1;
-    }
-
     void printTable()
     {
-        for (int i = 0; i < size; i++) // Corrected loop condition
+        for (int i = 0; i < size; i++) 
         {
-            if (Array0[i] == -1)
+            if (arr1[i] == -1)
             {
                 cout << "- ";
             }
             else
             {
-                cout << Array0[i] << " ";
+                cout << arr1[i] << " ";
             }
         }
         cout << endl;
